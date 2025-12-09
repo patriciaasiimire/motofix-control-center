@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   Bike,
+  Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -18,6 +19,7 @@ const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/requests', icon: Wrench, label: 'Requests' },
   { to: '/mechanics', icon: Users, label: 'Mechanics' },
+  { to: '/mechanics-management', icon: Settings, label: 'Manage Mechanics' },
   { to: '/payments', icon: CreditCard, label: 'Payments' },
 ];
 
