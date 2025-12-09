@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Requests from "./pages/Requests";
 import Mechanics from "./pages/Mechanics";
+import MechanicsManagement from "./pages/MechanicsManagement";
 import Payments from "./pages/Payments";
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/requests" element={<Requests />} />
           <Route path="/mechanics" element={<Mechanics />} />
+          <Route path="/mechanics-management" element={<MechanicsManagement />} />
           <Route path="/payments" element={<Payments />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -139,6 +139,46 @@ export const fetchMechanics = (params: MechanicsParams) => {
   return fetchWithAuth<PaginatedResponse<Mechanic>>(`/admin/mechanics?${searchParams}`);
 };
 
+// Mechanic CRUD operations
+export interface CreateMechanicData {
+  name: string;
+  phone: string;
+  location: string;
+  vehicleType: string;
+  password: string;
+}
+
+export interface UpdateMechanicData {
+  name?: string;
+  phone?: string;
+  location?: string;
+  vehicleType?: string;
+  password?: string;
+}
+
+export const createMechanic = (data: CreateMechanicData) =>
+  fetchWithAuth<Mechanic>('/admin/mechanics', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+export const updateMechanic = (id: string, data: UpdateMechanicData) =>
+  fetchWithAuth<Mechanic>(`/admin/mechanics/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+
+export const toggleMechanicVerification = (id: string, verified: boolean) =>
+  fetchWithAuth<Mechanic>(`/admin/mechanics/${id}/verify`, {
+    method: 'PATCH',
+    body: JSON.stringify({ verified }),
+  });
+
+export const deleteMechanic = (id: string) =>
+  fetchWithAuth<{ success: boolean }>(`/admin/mechanics/${id}`, {
+    method: 'DELETE',
+  });
+
 // Payments
 export interface Payment {
   id: string;
