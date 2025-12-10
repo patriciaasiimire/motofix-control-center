@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { setAuthToken } from '@/lib/api';
 import { toast } from 'sonner';
-import { Bike, Lock, Loader2 } from 'lucide-react';
+import { Lock, Loader2 } from 'lucide-react';
 
 export default function Login() {
   const [password, setPassword] = useState('');
@@ -13,22 +13,28 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!password.trim()) {
+
+    const trimmed = password.trim();
+
+    if (!trimmed) {
       toast.error('Please enter a password');
       return;
     }
 
     setIsLoading(true);
-    
     try {
-      // For now, accept any password and use it as the token
-      // In production, this would call the actual login endpoint
-      setAuthToken(password);
-      toast.success('Welcome back, Admin!');
-      navigate('/dashboard');
-    } catch (error) {
-      toast.error('Invalid password. Please try again.');
+      // Master-password check (no API calls). Change these values later as needed.
+      const MASTER_PASSWORD = 'motofix2025admin';
+      const REAL_JWT =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3F3ZXIiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3MzE3Nzc5MDAsImV4cCI6MjA0NzE3NzkwMH0.V3ry8exampleLongTokenHereReplaceWithYourRealOneFromSwagger';
+
+      if (trimmed === MASTER_PASSWORD) {
+        setAuthToken(REAL_JWT);
+        toast.success('Welcome back, Boss');
+        navigate('/dashboard');
+      } else {
+        toast.error('Wrong password – access denied');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -48,7 +54,11 @@ export default function Login() {
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
             <div className="p-4 rounded-2xl gradient-primary glow-primary mb-4">
-              <Bike className="w-10 h-10 text-primary-foreground" />
+              <img
+                src="public/ic_launcher_foreground.png"
+                alt="MOTOFIX Logo"
+                className="w-16 h-16 object-contain drop-shadow-lg"
+              />
             </div>
             <h1 className="text-3xl font-bold text-gradient">MOTOFIX</h1>
             <p className="text-muted-foreground text-sm mt-1">Admin Control Room</p>
@@ -57,9 +67,7 @@ export default function Login() {
           {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">
-                Admin Password
-              </label>
+              <label className="text-sm font-medium text-muted-foreground">Admin Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -73,13 +81,7 @@ export default function Login() {
               </div>
             </div>
 
-            <Button
-              type="submit"
-              variant="gradient"
-              size="lg"
-              className="w-full"
-              disabled={isLoading}
-            >
+            <Button type="submit" variant="gradient" size="lg" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="animate-spin" />
@@ -91,16 +93,10 @@ export default function Login() {
             </Button>
           </form>
 
-          {/* Footer */}
-          <p className="text-center text-xs text-muted-foreground mt-6">
-            Secure access to your control room
-          </p>
+          <p className="text-center text-xs text-muted-foreground mt-6">Secure access to your control room</p>
         </div>
 
-        {/* Tagline */}
-        <p className="text-center text-muted-foreground text-sm mt-6">
-          Powering motorcycle repairs across Uganda
-        </p>
+        <p className="text-center text-muted-foreground text-sm mt-6">Your Car's Best Friend</p>
       </div>
     </div>
   );

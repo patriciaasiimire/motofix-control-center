@@ -1,22 +1,22 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://motofix-admin-dashboard.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
-// Hardcoded admin token for now
-const ADMIN_TOKEN = 'YOUR_ADMIN_TOKEN_HERE';
+// No hardcoded admin token here anymore — tokens must come from a real login.
+const TOKEN_KEY = 'motofix_admin_token';
 
-export const getAuthToken = () => {
-  return localStorage.getItem('motofix_admin_token') || ADMIN_TOKEN;
+export const getAuthToken = (): string | null => {
+  return localStorage.getItem(TOKEN_KEY);
 };
 
 export const setAuthToken = (token: string) => {
-  localStorage.setItem('motofix_admin_token', token);
+  localStorage.setItem(TOKEN_KEY, token);
 };
 
 export const clearAuthToken = () => {
-  localStorage.removeItem('motofix_admin_token');
+  localStorage.removeItem(TOKEN_KEY);
 };
 
 export const isAuthenticated = () => {
-  return !!localStorage.getItem('motofix_admin_token');
+  return !!getAuthToken();
 };
 
 class ApiError extends Error {
@@ -28,7 +28,14 @@ class ApiError extends Error {
 
 async function fetchWithAuth<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = getAuthToken();
-  
+
+  // If no token, force user to login
+  if (!token) {
+    clearAuthToken();
+    window.location.href = '/login';
+    throw new ApiError(401, 'No auth token');
+  }
+
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers: {
@@ -39,13 +46,15 @@ async function fetchWithAuth<T>(endpoint: string, options: RequestInit = {}): Pr
   });
 
   if (response.status === 401) {
+    // Token invalid or expired -> clear and redirect to login
     clearAuthToken();
     window.location.href = '/login';
     throw new ApiError(401, 'Unauthorized');
   }
 
   if (!response.ok) {
-    throw new ApiError(response.status, `API Error: ${response.statusText}`);
+    const text = await response.text().catch(() => response.statusText);
+    throw new ApiError(response.status, `API Error: ${text}`);
   }
 
   return response.json();
@@ -68,10 +77,10 @@ export interface RevenueData {
   amount: number;
 }
 
-export const fetchDashboardStats = () => 
+export const fetchDashboardStats = () =>
   fetchWithAuth<DashboardStats>('/admin/dashboard/stats');
 
-export const fetchRevenueChart = () => 
+export const fetchRevenueChart = () =>
   fetchWithAuth<RevenueData[]>('/admin/dashboard/revenue-chart');
 
 // Service Requests
@@ -106,7 +115,7 @@ export const fetchServiceRequests = (params: RequestsParams) => {
   if (params.pageSize) searchParams.set('pageSize', params.pageSize.toString());
   if (params.status && params.status !== 'all') searchParams.set('status', params.status);
   if (params.search) searchParams.set('search', params.search);
-  
+
   return fetchWithAuth<PaginatedResponse<ServiceRequest>>(`/admin/requests?${searchParams}`);
 };
 
@@ -135,7 +144,7 @@ export const fetchMechanics = (params: MechanicsParams) => {
   if (params.pageSize) searchParams.set('pageSize', params.pageSize.toString());
   if (params.verifiedOnly) searchParams.set('verified', 'true');
   if (params.search) searchParams.set('search', params.search);
-  
+
   return fetchWithAuth<PaginatedResponse<Mechanic>>(`/admin/mechanics?${searchParams}`);
 };
 
@@ -211,16 +220,17 @@ export const fetchPayments = (params: PaymentsParams) => {
   if (params.type && params.type !== 'all') searchParams.set('type', params.type);
   if (params.status && params.status !== 'all') searchParams.set('status', params.status);
   if (params.search) searchParams.set('search', params.search);
-  
+
   return fetchWithAuth<PaginatedResponse<Payment>>(`/admin/payments?${searchParams}`);
 };
 
-export const fetchPaymentStats = () => 
+export const fetchPaymentStats = () =>
   fetchWithAuth<PaymentStats>('/admin/payments/stats');
 
 // Auth
-export const adminLogin = async (password: string): Promise<{ token: string }> => {
-  const response = await fetch(`${API_BASE_URL}/admin/login`, {
+// Calls backend login endpoint, stores token, and returns token info
+export const adminLogin = async (password: string): Promise<{ access_token: string; token_type: string }> => {
+  const response = await fetch(`${API_BASE_URL}/api/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ password }),
@@ -230,5 +240,9 @@ export const adminLogin = async (password: string): Promise<{ token: string }> =
     throw new ApiError(response.status, 'Invalid password');
   }
 
-  return response.json();
+  const data = await response.json();
+  if (data?.access_token) {
+    setAuthToken(data.access_token);
+  }
+  return data;
 };
