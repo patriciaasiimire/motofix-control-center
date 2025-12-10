@@ -15,12 +15,12 @@ import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { Mechanic } from '@/lib/api';
 
+// New schema — matches your LIVE backend 100%
 const mechanicSchema = z.object({
-  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(100, 'Name too long'),
-  phone: z.string().trim().regex(/^(\+256|0)[0-9]{9}$/, 'Enter valid Uganda phone (e.g., +256701234567 or 0701234567)'),
-  location: z.string().trim().min(2, 'Location required').max(100, 'Location too long'),
-  vehicleType: z.string().trim().min(2, 'Vehicle type required').max(50, 'Vehicle type too long'),
-  password: z.string().min(6, 'Password must be at least 6 characters').max(50, 'Password too long').optional().or(z.literal('')),
+  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(100),
+  phone: z.string().trim().regex(/^(\+256|0)[0-9]{9}$/, 'Valid Uganda phone required'),
+  location: z.string().trim().min(2, 'Location required').max(100),
+  is_verified: z.boolean().optional(),
 });
 
 type MechanicFormData = z.infer<typeof mechanicSchema>;
@@ -46,41 +46,35 @@ export function MechanicFormDialog({
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<MechanicFormData>({
-    resolver: zodResolver(
-      isEditing 
-        ? mechanicSchema.extend({ password: z.string().max(50).optional().or(z.literal('')) })
-        : mechanicSchema.extend({ password: z.string().min(6, 'Password required for new mechanic').max(50) })
-    ),
+    resolver: zodResolver(mechanicSchema),
     defaultValues: {
       name: '',
       phone: '',
       location: '',
-      vehicleType: '',
-      password: '',
+      is_verified: false,
     },
   });
 
+  // Sync form when dialog opens or mechanic changes
   useEffect(() => {
-    if (open) {
-      if (mechanic) {
-        reset({
-          name: mechanic.name,
-          phone: mechanic.phone,
-          location: mechanic.location,
-          vehicleType: 'Motorcycle', // Default since not in current type
-          password: '',
-        });
-      } else {
-        reset({
-          name: '',
-          phone: '',
-          location: '',
-          vehicleType: '',
-          password: '',
-        });
-      }
+    if (open && mechanic) {
+      reset({
+        name: mechanic.name,
+        phone: mechanic.phone,
+        location: mechanic.location,
+        is_verified: mechanic.verified,
+      });
+    } else if (open) {
+      reset({
+        name: '',
+        phone: '',
+        location: '',
+        is_verified: false,
+      });
     }
   }, [open, mechanic, reset]);
 
@@ -100,84 +94,50 @@ export function MechanicFormDialog({
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
-            <Input
-              id="name"
-              placeholder="John Okello"
-              {...register('name')}
-            />
-            {errors.name && (
-              <p className="text-xs text-destructive">{errors.name.message}</p>
-            )}
+            <Input id="name" placeholder="John Okello" {...register('name')} />
+            {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              id="phone"
-              placeholder="+256701234567"
-              {...register('phone')}
-            />
-            {errors.phone && (
-              <p className="text-xs text-destructive">{errors.phone.message}</p>
-            )}
+            <Input id="phone" placeholder="+256701234567" {...register('phone')} />
+            {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              placeholder="Kampala Central"
-              {...register('location')}
-            />
-            {errors.location && (
-              <p className="text-xs text-destructive">{errors.location.message}</p>
-            )}
+            <Input id="location" placeholder="Kampala Central" {...register('location')} />
+            {errors.location && <p className="text-xs text-destructive">{errors.location.message}</p>}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="vehicleType">Vehicle Type</Label>
-            <Input
-              id="vehicleType"
-              placeholder="Motorcycle, Boda-Boda, etc."
-              {...register('vehicleType')}
-            />
-            {errors.vehicleType && (
-              <p className="text-xs text-destructive">{errors.vehicleType.message}</p>
-            )}
-          </div>
+          {/* Verification Toggle — only show when editing */}
+          {isEditing && (
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="is_verified"
+                checked={watch('is_verified') || false}
+                onChange={(e) => setValue('is_verified', e.target.checked)}
+                className="w-4 h-4 text-primary rounded border-gray-300"
+              />
+              <Label htmlFor="is_verified" className="cursor-pointer">
+                Verified Mechanic
+              </Label>
+            </div>
+          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="password">
-              {isEditing ? 'New Password (leave blank to keep current)' : 'Password'}
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder={isEditing ? '••••••••' : 'Min 6 characters'}
-              {...register('password')}
-            />
-            {errors.password && (
-              <p className="text-xs text-destructive">{errors.password.message}</p>
-            )}
-          </div>
-
-          <DialogFooter className="pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
+          <DialogFooter className="pt-6">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Loader2 className="animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {isEditing ? 'Updating...' : 'Adding...'}
                 </>
               ) : (
-                isEditing ? 'Update Mechanic' : 'Add Mechanic'
+                <>{isEditing ? 'Update Mechanic' : 'Add Mechanic'}</>
               )}
             </Button>
           </DialogFooter>

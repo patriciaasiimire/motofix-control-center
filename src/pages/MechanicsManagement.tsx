@@ -14,10 +14,8 @@ import {
   fetchMechanics,
   createMechanic,
   updateMechanic,
-  toggleMechanicVerification,
   deleteMechanic,
   Mechanic,
-  CreateMechanicData,
 } from '@/lib/api';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -32,7 +30,7 @@ import {
   Settings,
 } from 'lucide-react';
 
-// Mock data for demo
+// Mock data for offline demo
 const mockMechanics: Mechanic[] = [
   { id: '1', name: 'John Okello', phone: '+256701234567', location: 'Kampala Central', rating: 4.8, jobsCompleted: 156, verified: true, joinedAt: '2023-06-15T00:00:00Z' },
   { id: '2', name: 'Peter Ssemwogerere', phone: '+256702345678', location: 'Nakawa', rating: 4.5, jobsCompleted: 98, verified: true, joinedAt: '2023-08-20T00:00:00Z' },
@@ -51,14 +49,12 @@ export default function MechanicsManagement() {
   const [verified, setVerified] = useState('all');
   const [page, setPage] = useState(1);
   
-  // Dialog states
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedMechanic, setSelectedMechanic] = useState<Mechanic | null>(null);
   
   const queryClient = useQueryClient();
 
-  // Fetch mechanics
   const { data, isLoading } = useQuery({
     queryKey: ['mechanics-management', { search, verified, page }],
     queryFn: () => fetchMechanics({ search, verifiedOnly: verified === 'verified', page, pageSize: 10 }),
@@ -72,7 +68,6 @@ export default function MechanicsManagement() {
     },
   });
 
-  // Create mutation
   const createMutation = useMutation({
     mutationFn: createMechanic,
     onSuccess: () => {
@@ -81,42 +76,31 @@ export default function MechanicsManagement() {
       setFormDialogOpen(false);
       setSelectedMechanic(null);
     },
-    onError: () => {
-      toast.error('Failed to add mechanic');
-    },
+    onError: () => toast.error('Failed to add mechanic'),
   });
 
-  // Update mutation
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CreateMechanicData> }) =>
-      updateMechanic(id, data),
+    mutationFn: ({ id, data }: { id: string; data: any }) => updateMechanic(id, data),
     onSuccess: () => {
       toast.success('Mechanic updated successfully');
       queryClient.invalidateQueries({ queryKey: ['mechanics-management'] });
       setFormDialogOpen(false);
       setSelectedMechanic(null);
     },
-    onError: () => {
-      toast.error('Failed to update mechanic');
-    },
+    onError: () => toast.error('Failed to update mechanic'),
   });
 
-  // Toggle verification mutation
+  // Toggle verification using updateMechanic
   const toggleVerificationMutation = useMutation({
     mutationFn: ({ id, verified }: { id: string; verified: boolean }) =>
-      toggleMechanicVerification(id, verified),
+      updateMechanic(id, { is_verified: verified }),
     onSuccess: (_, variables) => {
-      toast.success(
-        variables.verified ? 'Mechanic verified' : 'Verification removed'
-      );
+      toast.success(variables.verified ? 'Mechanic verified' : 'Verification removed');
       queryClient.invalidateQueries({ queryKey: ['mechanics-management'] });
     },
-    onError: () => {
-      toast.error('Failed to update verification status');
-    },
+    onError: () => toast.error('Failed to update verification status'),
   });
 
-  // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: deleteMechanic,
     onSuccess: () => {
@@ -125,9 +109,7 @@ export default function MechanicsManagement() {
       setDeleteDialogOpen(false);
       setSelectedMechanic(null);
     },
-    onError: () => {
-      toast.error('Failed to delete mechanic');
-    },
+    onError: () => toast.error('Failed to delete mechanic'),
   });
 
   const handleAddNew = () => {
@@ -146,31 +128,37 @@ export default function MechanicsManagement() {
   };
 
   const handleToggleVerified = (mechanic: Mechanic) => {
-    // Optimistic update for demo
-    toast.success(mechanic.verified ? 'Verification removed' : 'Mechanic verified');
     toggleVerificationMutation.mutate({
       id: mechanic.id,
       verified: !mechanic.verified,
     });
   };
 
-  const handleFormSubmit = (formData: CreateMechanicData) => {
+  // FIXED: No more password/vehicleType → matches live backend
+  const handleFormSubmit = (formData: any) => {
+    const cleanData = {
+      name: formData.name,
+      phone: formData.phone,
+      location: formData.location,
+      is_verified: formData.is_verified || false,
+    };
+
     if (selectedMechanic) {
-      // Filter out empty password for updates
-      const updateData = { ...formData };
-      if (!updateData.password) {
-        delete (updateData as Partial<CreateMechanicData>).password;
-      }
-      updateMutation.mutate({ id: selectedMechanic.id, data: updateData });
+      // Only send changed fields
+      const updates: any = {};
+      if (cleanData.name !== selectedMechanic.name) updates.name = cleanData.name;
+      if (cleanData.phone !== selectedMechanic.phone) updates.phone = cleanData.phone;
+      if (cleanData.location !== selectedMechanic.location) updates.location = cleanData.location;
+      if (cleanData.is_verified !== selectedMechanic.verified) updates.is_verified = cleanData.is_verified;
+
+      updateMutation.mutate({ id: selectedMechanic.id, data: updates });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(cleanData);
     }
   };
 
   const handleDeleteConfirm = () => {
-    if (selectedMechanic) {
-      deleteMutation.mutate(selectedMechanic.id);
-    }
+    if (selectedMechanic) deleteMutation.mutate(selectedMechanic.id);
   };
 
   const columns: ColumnDef<Mechanic>[] = [
@@ -282,7 +270,6 @@ export default function MechanicsManagement() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold flex items-center gap-2">
@@ -299,7 +286,6 @@ export default function MechanicsManagement() {
           </Button>
         </div>
 
-        {/* Filters */}
         <TableFilters
           searchValue={search}
           onSearchChange={setSearch}
@@ -313,7 +299,6 @@ export default function MechanicsManagement() {
           />
         </TableFilters>
 
-        {/* Table */}
         <DataTable
           columns={columns}
           data={displayData}
@@ -327,7 +312,6 @@ export default function MechanicsManagement() {
           } : undefined}
         />
 
-        {/* Add/Edit Dialog */}
         <MechanicFormDialog
           open={formDialogOpen}
           onOpenChange={setFormDialogOpen}
@@ -336,7 +320,6 @@ export default function MechanicsManagement() {
           isLoading={createMutation.isPending || updateMutation.isPending}
         />
 
-        {/* Delete Confirmation Dialog */}
         <DeleteMechanicDialog
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
