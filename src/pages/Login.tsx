@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { setAuthToken } from '@/lib/api';
+import { adminLogin } from '@/lib/api';
 import { toast } from 'sonner';
 import { Lock, Loader2 } from 'lucide-react';
 
@@ -23,17 +23,18 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      // Master-password check (no API calls). Change these values later as needed.
-      const MASTER_PASSWORD = 'motofix2025admin';
-      const REAL_JWT =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3F3ZXIiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3MzE3Nzc5MDAsImV4cCI6MjA0NzE3NzkwMH0.V3ry8exampleLongTokenHereReplaceWithYourRealOneFromSwagger';
-
-      if (trimmed === MASTER_PASSWORD) {
-        setAuthToken(REAL_JWT);
-        toast.success('Welcome back, Boss');
-        navigate('/dashboard');
-      } else {
+      // Call the backend login endpoint with the master password
+      // Backend validates and returns a real JWT token
+      await adminLogin(trimmed);
+      toast.success('Welcome back, Boss');
+      navigate('/dashboard');
+    } catch (err: any) {
+      // Backend returns 401 or 422 for invalid password
+      if (err?.status === 401 || err?.status === 422) {
         toast.error('Wrong password – access denied');
+      } else {
+        console.error('Login error', err);
+        toast.error('Login failed. Please try again later.');
       }
     } finally {
       setIsLoading(false);
