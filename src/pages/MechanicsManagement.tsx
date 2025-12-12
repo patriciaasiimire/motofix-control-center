@@ -56,7 +56,10 @@ export default function MechanicsManagement() {
     mutationFn: createMechanic,
     onSuccess: () => {
       toast.success('Mechanic added successfully');
+      // Invalidate all mechanic-related queries to update all pages
       queryClient.invalidateQueries({ queryKey: ['mechanics-management'] });
+      queryClient.invalidateQueries({ queryKey: ['mechanics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       setFormDialogOpen(false);
       setSelectedMechanic(null);
     },
@@ -67,7 +70,10 @@ export default function MechanicsManagement() {
     mutationFn: ({ id, data }: { id: string; data: any }) => updateMechanic(id, data),
     onSuccess: () => {
       toast.success('Mechanic updated successfully');
+      // Invalidate all mechanic-related queries to update all pages
       queryClient.invalidateQueries({ queryKey: ['mechanics-management'] });
+      queryClient.invalidateQueries({ queryKey: ['mechanics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       setFormDialogOpen(false);
       setSelectedMechanic(null);
     },
@@ -80,7 +86,10 @@ export default function MechanicsManagement() {
       updateMechanic(id, { is_verified: verified }),
     onSuccess: (_, variables) => {
       toast.success(variables.verified ? 'Mechanic verified' : 'Verification removed');
+      // Invalidate all mechanic-related queries to update all pages
       queryClient.invalidateQueries({ queryKey: ['mechanics-management'] });
+      queryClient.invalidateQueries({ queryKey: ['mechanics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
     },
     onError: () => toast.error('Failed to update verification status'),
   });
@@ -89,7 +98,10 @@ export default function MechanicsManagement() {
     mutationFn: deleteMechanic,
     onSuccess: () => {
       toast.success('Mechanic deleted');
+      // Invalidate all mechanic-related queries to update all pages
       queryClient.invalidateQueries({ queryKey: ['mechanics-management'] });
+      queryClient.invalidateQueries({ queryKey: ['mechanics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       setDeleteDialogOpen(false);
       setSelectedMechanic(null);
     },
