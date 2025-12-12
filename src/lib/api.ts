@@ -3,9 +3,12 @@
 // Use an empty base in development so requests go to the dev server origin
 // and are proxied by Vite to the hosted API (avoids CORS). In production
 // use the hosted API URL directly.
-const API_BASE_URL = 'https://motofix-admin-dashboard.onrender.com';
-
+// Safe for production — no hard-coded URLs in Git
+const API_BASE_URL = 
+  import.meta.env.VITE_API_BASE_URL || 
+  'http://localhost:8000';  // fallback for local dev
 // No hardcoded admin token here anymore — tokens must come from a real login.
+
 const TOKEN_KEY = 'motofix_admin_token';
 
 export const getAuthToken = (): string | null => {
