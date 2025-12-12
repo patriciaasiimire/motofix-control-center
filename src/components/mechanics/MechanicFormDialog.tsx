@@ -5,6 +5,7 @@ import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -89,6 +90,11 @@ export function MechanicFormDialog({
           <DialogTitle className="text-xl">
             {isEditing ? 'Edit Mechanic' : 'Add New Mechanic'}
           </DialogTitle>
+          <DialogDescription>
+            {isEditing
+              ? 'Update the mechanic details below. Save when you are done.'
+              : 'Fill in the mechanic details to add them to Motofix.'}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 py-4">
