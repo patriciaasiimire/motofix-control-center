@@ -30,15 +30,6 @@ import {
   Settings,
 } from 'lucide-react';
 
-// Mock data for offline demo
-const mockMechanics: Mechanic[] = [
-  { id: '1', name: 'John Okello', phone: '+256701234567', location: 'Kampala Central', rating: 4.8, jobsCompleted: 156, verified: true, joinedAt: '2023-06-15T00:00:00Z' },
-  { id: '2', name: 'Peter Ssemwogerere', phone: '+256702345678', location: 'Nakawa', rating: 4.5, jobsCompleted: 98, verified: true, joinedAt: '2023-08-20T00:00:00Z' },
-  { id: '3', name: 'James Mugisha', phone: '+256703456789', location: 'Makindye', rating: 4.2, jobsCompleted: 45, verified: false, joinedAt: '2023-10-10T00:00:00Z' },
-  { id: '4', name: 'David Lubega', phone: '+256704567890', location: 'Ntinda', rating: 4.9, jobsCompleted: 201, verified: true, joinedAt: '2023-03-05T00:00:00Z' },
-  { id: '5', name: 'Moses Kasule', phone: '+256705678901', location: 'Wandegeya', rating: 3.8, jobsCompleted: 23, verified: false, joinedAt: '2024-01-02T00:00:00Z' },
-];
-
 const verifiedOptions = [
   { value: 'all', label: 'All Mechanics' },
   { value: 'verified', label: 'Verified Only' },
@@ -59,13 +50,6 @@ export default function MechanicsManagement() {
     queryKey: ['mechanics-management', { search, verified, page }],
     queryFn: () => fetchMechanics({ search, verifiedOnly: verified === 'verified', page, pageSize: 10 }),
     retry: false,
-    placeholderData: {
-      data: mockMechanics,
-      total: 89,
-      page: 1,
-      pageSize: 10,
-      totalPages: 9,
-    },
   });
 
   const createMutation = useMutation({
@@ -265,7 +249,7 @@ export default function MechanicsManagement() {
     },
   ];
 
-  const displayData = data?.data || mockMechanics;
+  const displayData = data?.data || [];
 
   return (
     <DashboardLayout>

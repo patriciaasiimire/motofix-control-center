@@ -166,14 +166,33 @@ export interface MechanicsParams {
   search?: string;
 }
 
-export const fetchMechanics = (params: MechanicsParams) => {
+export const fetchMechanics = async (params: MechanicsParams) => {
   const searchParams = new URLSearchParams();
   if (params.page) searchParams.set('page', params.page.toString());
   if (params.pageSize) searchParams.set('pageSize', params.pageSize.toString());
   if (params.verifiedOnly) searchParams.set('verified', 'true');
   if (params.search) searchParams.set('search', params.search);
 
-  return fetchWithAuth<PaginatedResponse<Mechanic>>(`/admin/mechanics?${searchParams}`);
+  const raw = await fetchWithAuth<any>(`/admin/mechanics?${searchParams}`);
+  const data: Mechanic[] = (raw.data || raw || []).map((m: any) => ({
+    id: String(m.id),
+    name: m.name,
+    phone: m.phone,
+    location: m.location ?? '',
+    rating: Number(m.rating ?? 0),
+    jobsCompleted: Number(m.jobs_completed ?? m.jobsCompleted ?? 0),
+    verified: Boolean(m.is_verified ?? m.verified),
+    joinedAt: m.created_at ?? m.createdAt ?? new Date().toISOString(),
+  }));
+
+  // Support both paginated and plain array responses
+  return {
+    data,
+    page: raw.page ?? params.page ?? 1,
+    pageSize: raw.pageSize ?? params.pageSize ?? data.length,
+    total: raw.total ?? data.length,
+    totalPages: raw.totalPages ?? 1,
+  } as PaginatedResponse<Mechanic>;
 };
 
 // Mechanic CRUD operations
