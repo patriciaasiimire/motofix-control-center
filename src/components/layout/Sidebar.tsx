@@ -64,7 +64,7 @@ export function Sidebar() {
               {/* Replace the Bike icon with your custom logo image */}
               {/* Assuming your logo is placed in public/logo.png (or adjust the path/filename as needed) */}
               <img
-                src="public\logo.png"
+                src="/logo.png"
                 alt="Motofix Logo"
                 className="w-6 h-6 object-contain"
               />
