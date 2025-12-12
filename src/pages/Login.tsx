@@ -56,7 +56,7 @@ export default function Login() {
           <div className="flex flex-col items-center mb-8">
             <div className="p-4 rounded-2xl gradient-primary glow-primary mb-4">
               <img
-                src="public/ic_launcher_foreground.png"
+                src="public/logo.png"
                 alt="MOTOFIX Logo"
                 className="w-16 h-16 object-contain drop-shadow-lg"
               />
