@@ -61,7 +61,13 @@ export function Sidebar() {
           {/* Logo */}
           <div className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border">
             <div className="p-2 rounded-xl gradient-primary">
-              <Bike className="w-6 h-6 text-primary-foreground" />
+              {/* Replace the Bike icon with your custom logo image */}
+              {/* Assuming your logo is placed in public/logo.png (or adjust the path/filename as needed) */}
+              <img
+                src="public\ic_launcher_foreground.png"
+                alt="Motofix Logo"
+                className="w-6 h-6 object-contain"
+              />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gradient">MOTOFIX</h1>
